@@ -1,0 +1,1 @@
+kubectl apply -fhttps://raw.githubusercontent.com/digitalocean/csi-digitalocean/master/deploy/kubernetes/releases/csi-digitalocean-v4.10.0/{crds.yaml,driver.yaml,snapshot-controller.yaml}

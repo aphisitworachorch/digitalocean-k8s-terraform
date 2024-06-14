@@ -1,0 +1,8 @@
+.terraform.lock.hcl
+/config
+/ssh_keys
+*.tfstate
+*.tfvars
+.terraform.tfstate.lock.info
+*.backup
+/.terraform
