@@ -1,0 +1,15 @@
+cluster_name             = ""
+do_token                 = ""
+droplet_images           = ""
+digitalocean_vpc         = ""
+digitalocean_tags        = [""]
+digitalocean_ssh_list    = [""]
+digitalocean_region      = ""
+control_plane_node_name = ""
+control_plane_node_droplet_size = ""
+master_node_name         = ""
+master_node_droplet_size = ""
+master_nodes_count       = 1
+worker_node_name         = ""
+worker_node_droplet_size = ""
+worker_nodes_count       = 1

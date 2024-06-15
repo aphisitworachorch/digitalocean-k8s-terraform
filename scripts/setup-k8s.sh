@@ -13,6 +13,10 @@ sudo timedatectl set-timezone Asia/Bangkok
 sudo setenforce 0
 sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
 
+sudo yum -y install epel-release
+sudo yum -y update
+
+sudo dnf install htop -y
 #3) Add  kernel settings & Enable IP tables(CNI Prerequisites)
 
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
@@ -101,10 +105,6 @@ sudo systemctl start crio
 ## This Installation without Kube Proxy
 ## We Use Cilium Instead of Kube-Proxy
 
-dnf makecache
-systemctl enable --now kubelet.service
-systemctl status kubelet
-
 sudo dnf install yum-plugin-versionlock -y
 
 dnf makecache
@@ -112,3 +112,6 @@ sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 sudo systemctl enable --now kubelet
 
 sudo dnf versionlock kubelet kubeadm kubectl
+
+sudo systemctl enable --now kubelet.service
+sudo systemctl status kubelet

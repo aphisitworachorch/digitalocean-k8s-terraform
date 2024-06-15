@@ -1,8 +1,10 @@
 .terraform.lock.hcl
-/config
+/config/*
 /ssh_keys
 *.tfstate
 *.tfvars
 .terraform.tfstate.lock.info
 *.backup
-/.terraform
+/.terraform/*
+/scripts/join-master.sh
+/scripts/join-worker.sh
