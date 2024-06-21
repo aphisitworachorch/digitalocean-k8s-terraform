@@ -29,11 +29,11 @@ resource "null_resource" "control-plane-node-initial" {
   provisioner "local-exec" {
     command = "scp -o StrictHostKeyChecking=no -i ssh_keys/id_rsa root@${digitalocean_droplet.control-plane-node[count.index].ipv4_address}:./join-master.sh scripts/join-master.sh"
   }
-  
+
   provisioner "local-exec" {
     command = "scp -o StrictHostKeyChecking=no -i ssh_keys/id_rsa root@${digitalocean_droplet.control-plane-node[count.index].ipv4_address}:./join-worker.sh scripts/join-worker.sh"
   }
-  
+
   provisioner "local-exec" {
     command = "scp -o StrictHostKeyChecking=no -i ssh_keys/id_rsa root@${digitalocean_droplet.control-plane-node[count.index].ipv4_address}:./kubeconfig config/kubeconfig"
   }

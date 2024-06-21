@@ -4,11 +4,12 @@ then
     exit 1
 fi
 
-dnf install -y wget
-
 kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 
 export MASTER_NODE_IP=$1
+
+# Metrics Server
+kubectl apply -f /tmp/metrics-server.yaml
 
 # Install Helm
 curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
@@ -54,7 +55,7 @@ helm upgrade --install cilium cilium/cilium \
     --set k8s.requireIPv4PodCIDR=true \
     --set k8s.requireIPv6PodCIDR=true \
     --set enableIPv6Masquerade=true \
-    --set devices="{eth0}" \
+    --set devices="{eth0, eth1}" \
     --set l2announcements.enabled=true \
     --set l2announcements.leaseDuration=3s \
     --set l2announcements.leaseRenewDeadline=1s \
@@ -68,13 +69,9 @@ kubectl apply -f /tmp/digitalocean-secret.yaml -n kube-system
 export CSI_DO_VERSION=$(wget -qO - "https://api.github.com/repos/digitalocean/csi-digitalocean/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 kubectl apply -fhttps://raw.githubusercontent.com/digitalocean/csi-digitalocean/master/deploy/kubernetes/releases/csi-digitalocean-$CSI_DO_VERSION/{crds.yaml,driver.yaml,snapshot-controller.yaml}
 
-
-# Add Memory Swap Control
+## Add Memory Swap Control
 helm repo add nri-plugins https://containers.github.io/nri-plugins
-helm install nri-memory-qos nri-plugins/nri-memory-qos --set nri.patchRuntimeConfig=true --namespace kube-system
-
-# Metrics Server
-kubectl apply -f /tmp/metrics-server.yaml
+helm install my-memory-qos nri-plugins/nri-memory-qos --namespace kube-system --set nri.patchRuntimeConfig=true
 
 # Install Cert-Manager
 helm repo add jetstack https://charts.jetstack.io --force-update

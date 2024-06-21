@@ -1,10 +1,19 @@
 #!/bin/bash
 
+# Tune CGroups
+sudo mkdir /usr/lib/systemd/system/user@.service.d
+sudo cat > /usr/lib/systemd/system/user@.service.d/delegate.conf<<EOF
+[Service]
+Delegate=cpu cpuset io memory pids
+EOF
+sudo systemctl daemon-reload
+
 # Rocky Linux K8s Installation with Cilium Enabled on CRI-O
 # This scripts for Master / Worker Node
 
 dnf makecache --refresh
 sudo dnf install yum-plugin-versionlock -y
+sudo dnf install -y wget
 
 sudo timedatectl set-timezone Asia/Bangkok
 
@@ -19,23 +28,22 @@ sudo yum -y update
 sudo dnf install htop -y
 #3) Add  kernel settings & Enable IP tables(CNI Prerequisites)
 
-cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
+cat > sudo tee /etc/modules-load.d/k8s.conf << EOF
 overlay
 br_netfilter
 EOF
 
-modprobe overlay
-modprobe br_netfilter
-
-cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+cat <<EOF | sudo tee /etc/sysctl.d/kubernetes.conf
 net.ipv4.ip_forward = 1
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 net.ipv6.conf.all.forwarding=1
 EOF
 
-sudo sysctl -w net.ipv6.conf.all.forwarding=1
-echo net.ipv6.conf.all.forwarding=1 >> /etc/sysctl.conf
+sudo sysctl --system
 
 # Swap Enable
 dd if=/dev/zero of=/swapfile bs=256M count=32
@@ -51,8 +59,6 @@ sudo dnf update -y
 sudo dnf install ca-certificates curl gnupg -y
 
 # CRI-O Installation
-export CNI_VERSION=v1.4.0
-
 cat <<EOF | tee /etc/yum.repos.d/cri-o.repo
 [cri-o]
 name=CRI-O
@@ -61,14 +67,12 @@ enabled=1
 gpgcheck=1
 gpgkey=https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/rpm/repodata/repomd.xml.key
 EOF
-
-sudo dnf install -y container-selinux
     
 # Install CNI Support
-
+export CNI_VERSION=$(wget -qO - "https://api.github.com/repos/containernetworking/plugins/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 mkdir -p /opt/cni/bin/
-curl -L -O https://github.com/containernetworking/plugins/releases/download/v1.5.0/cni-plugins-linux-amd64-v1.5.0.tgz
-sudo tar Cxzvf /opt/cni/bin/ cni-plugins-linux-amd64-v1.5.0.tgz
+curl -L -O https://github.com/containernetworking/plugins/releases/download/$CNI_VERSION/cni-plugins-linux-amd64-$CNI_VERSION.tgz
+sudo tar Cxzvf /opt/cni/bin/ cni-plugins-linux-amd64-$CNI_VERSION.tgz
 
 #5) Installing kubeadm, kubelet and kubectl
 
@@ -96,6 +100,26 @@ sudo dnf install -y cri-o cri-tools
 
 sudo dnf versionlock cri-o
 
+# Additional Setup for CRI-O
+cat <<EOF | sudo tee /etc/crio/crio.conf.d/02-cgroup-manager.conf
+[crio.api]
+default_capabilities = [
+	"CHOWN",
+	"DAC_OVERRIDE",
+	"FSETID",
+	"FOWNER",
+	"SETGID",
+	"SETUID",
+	"SETPCAP",
+	"NET_BIND_SERVICE",
+	"KILL",
+]
+[crio.network]
+plugin_dirs = [
+	"/opt/cni/bin",
+]
+EOF
+
 # Enable and start kubelet service
 sudo systemctl daemon-reload
 sudo systemctl enable --now crio
@@ -109,9 +133,6 @@ sudo dnf install yum-plugin-versionlock -y
 
 dnf makecache
 sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
-sudo systemctl enable --now kubelet
-
 sudo dnf versionlock kubelet kubeadm kubectl
-
+sudo systemctl enable --now kubelet
 sudo systemctl enable --now kubelet.service
-sudo systemctl status kubelet

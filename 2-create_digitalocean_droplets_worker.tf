@@ -10,4 +10,3 @@ resource "digitalocean_droplet" "worker-node" {
   ipv6       = true
   tags       = var.digitalocean_tags
 }
-

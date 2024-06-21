@@ -4,9 +4,10 @@
 * CentOS-based K8s Install Script (AlmaLinux / Rocky Linux / CentOS)
 * K8s v1.30
 * Swap-Enabled
-* NRI Memory Control
-* Cilium eBPF
-* DigitalOcean CSI Integrated
+* CRI-O
+* NRI Memory QoS
+* Cilium eBPF / Cilium Load Balancer
+* DigitalOcean CSI PV Integrated
 
 ### Install Instruction 🏗️
 1. For variables: write in *.tfavrs (* is any name) for variables (Example file in example.tfvars.ex)

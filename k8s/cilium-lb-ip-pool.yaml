@@ -1,0 +1,18 @@
+apiVersion: "cilium.io/v2alpha1"
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: "ip-pools"
+  namespace: "kube-system"
+spec:
+  blocks:
+  - cidr: "{{ipv4-ip}}/32"
+  - cidr: "{{ipv6-ip}}/120"
+---
+apiVersion: "cilium.io/v2alpha1"
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: "l2policy"
+  namespace: "kube-system"
+spec:
+  externalIPs: true
+  loadBalancerIPs: true
