@@ -63,6 +63,31 @@ resource "null_resource" "master-node-initial" {
   }
 
   provisioner "file" {
+    source      = "scripts/additional-setup-master-k8s.sh"
+    destination = "/tmp/additional-setup-master-k8s.sh"
+    connection {
+      type        = "ssh"
+      user        = "root"
+      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      private_key = file("ssh_keys/id_rsa")
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo chmod +x /tmp/additional-setup-master-k8s.sh",
+      "sudo /tmp/additional-setup-master-k8s.sh"
+    ]
+    connection {
+      type        = "ssh"
+      user        = "root"
+      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      private_key = file("ssh_keys/id_rsa")
+      timeout     = "600s"
+    }
+  }
+
+  provisioner "file" {
     source      = "k8s/cilium-lb-ip-pool.yaml"
     destination = "/tmp/cilium-lb-ip-pool.yaml"
     connection {
