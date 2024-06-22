@@ -39,8 +39,8 @@ resource "null_resource" "master-node-initial" {
 
 
   provisioner "file" {
-    source      = "scripts/copy-kubeconfig-script.sh"
-    destination = "/tmp/copy-kubeconfig-script.sh"
+    source      = "k8s/digitalocean-secret.yaml"
+    destination = "/tmp/digitalocean-secret.yaml"
     connection {
       type        = "ssh"
       user        = "root"
@@ -51,8 +51,7 @@ resource "null_resource" "master-node-initial" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo chmod +x /tmp/copy-kubeconfig-script.sh",
-      "sudo /tmp/copy-kubeconfig-script.sh"
+      "sed -i -e \"s|{{access-token}}|${var.do_token}|g\" /tmp/digitalocean-secret.yaml",
     ]
     connection {
       type        = "ssh"
@@ -82,7 +81,7 @@ resource "null_resource" "master-node-initial" {
     connection {
       type        = "ssh"
       user        = "root"
-      host        = digitalocean_droplet.control-plane-node[count.index].ipv4_address
+      host        = digitalocean_droplet.master-node[count.index].ipv4_address
       private_key = file("ssh_keys/id_rsa")
       timeout     = "600s"
     }
@@ -90,12 +89,13 @@ resource "null_resource" "master-node-initial" {
 
   provisioner "remote-exec" {
     inline = [
+      "export KUBECONFIG=/tmp/kubeconfig",
       "kubectl apply -f /tmp/cilium-lb-ip-pool.yaml"
     ]
     connection {
       type        = "ssh"
       user        = "root"
-      host        = digitalocean_droplet.control-plane-node[count.index].ipv4_address
+      host        = digitalocean_droplet.master-node[count.index].ipv4_address
       private_key = file("ssh_keys/id_rsa")
       timeout     = "600s"
     }

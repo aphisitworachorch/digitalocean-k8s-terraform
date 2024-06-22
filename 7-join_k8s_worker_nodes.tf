@@ -30,29 +30,4 @@ resource "null_resource" "join-worker-node" {
       timeout     = "600s"
     }
   }
-
-  provisioner "file" {
-    source      = "scripts/copy-kubeconfig-script.sh"
-    destination = "/tmp/copy-kubeconfig-script.sh"
-    connection {
-      type        = "ssh"
-      user        = "root"
-      host        = digitalocean_droplet.worker-node[count.index].ipv4_address
-      private_key = file("ssh_keys/id_rsa")
-    }
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo chmod +x /tmp/copy-kubeconfig-script.sh",
-      "sudo /tmp/copy-kubeconfig-script.sh"
-    ]
-    connection {
-      type        = "ssh"
-      user        = "root"
-      host        = digitalocean_droplet.worker-node[count.index].ipv4_address
-      private_key = file("ssh_keys/id_rsa")
-      timeout     = "600s"
-    }
-  }
 }

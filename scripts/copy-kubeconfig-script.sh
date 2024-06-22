@@ -1,3 +1,4 @@
 #!/bin/bash
 chmod +x /tmp/kubeconfig
-cp -i /tmp/kubeconfig ${HOME}/.kube/config
+mkdir -p ${HOME}/.kube
+cp -R -n /tmp/kubeconfig ${HOME}/.kube/config

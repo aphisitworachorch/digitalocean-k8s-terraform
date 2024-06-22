@@ -25,6 +25,7 @@ helm upgrade --install cilium cilium/cilium \
     --namespace kube-system \
     --create-namespace \
     --set bpf.masquerade=true \
+    --set bpf.autoMount.enabled=false \
     --set encryption.nodeEncryption=false \
     --set routingMode=tunnel \
     --set k8sServiceHost=$MASTER_NODE_IP \
@@ -43,7 +44,7 @@ helm upgrade --install cilium cilium/cilium \
     --set hubble.ui.enabled=true \
     --set prometheus.enabled=true \
     --set loadBalancer.acceleration=native \
-    --set loadBalancer.mode=snat \
+    --set loadBalancer.mode=hybrid \
     --set operator.prometheus.enabled=true \
     --set ipv6.enabled=true \
     --set bandwidthManager.enabled=true \
@@ -61,18 +62,8 @@ helm upgrade --install cilium cilium/cilium \
     --set l2announcements.leaseRenewDeadline=1s \
     --set l2announcements.leaseRetryPeriod=200ms \
     --set externalIPs.enabled=true \
-    --set hubble.metrics.enabled="{dns,drop,tcp,flow,port-distribution,icmp,http}"
-
-
-# Install DigitalOcean Volumes
-kubectl apply -f /tmp/digitalocean-secret.yaml -n kube-system
-export CSI_DO_VERSION=$(wget -qO - "https://api.github.com/repos/digitalocean/csi-digitalocean/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-kubectl apply -fhttps://raw.githubusercontent.com/digitalocean/csi-digitalocean/master/deploy/kubernetes/releases/csi-digitalocean-$CSI_DO_VERSION/{crds.yaml,driver.yaml,snapshot-controller.yaml}
+    --set containerRuntime.integration=crio
 
 ## Add Memory Swap Control
 helm repo add nri-plugins https://containers.github.io/nri-plugins
 helm install my-memory-qos nri-plugins/nri-memory-qos --namespace kube-system --set nri.patchRuntimeConfig=true
-
-# Install Cert-Manager
-helm repo add jetstack https://charts.jetstack.io --force-update
-helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --set crds.enabled=true

@@ -1,4 +1,4 @@
-# DigitalOcean Bare-Metal K8s ⚓🛞🐋
+# DigitalOcean Bare-Metal K8s ⚓
 
 ### Features 🌟
 * CentOS-based K8s Install Script (AlmaLinux / Rocky Linux / CentOS)
@@ -10,6 +10,7 @@
 * DigitalOcean CSI PV Integrated
 
 ### Install Instruction 🏗️
+##### IMPORTANT!!!! You must issue DigitalOcean PAT Token
 1. For variables: write in *.tfavrs (* is any name) for variables (Example file in example.tfvars.ex)
 2. To Run use : terraform apply -var-file='*.tfvars'
 3. To Destroy use : terraform destroy -var-file='*.tfvars'
