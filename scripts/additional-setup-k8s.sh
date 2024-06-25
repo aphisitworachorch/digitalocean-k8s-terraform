@@ -31,6 +31,7 @@ helm upgrade --install cilium cilium/cilium \
     --set k8sServiceHost=$MASTER_NODE_IP \
     --set k8sServicePort=6443  \
     --set kubeProxyReplacement=true  \
+    --set prometheus.enabled=true \
     --set operator.replicas=1  \
     --set serviceAccounts.cilium.name=cilium  \
     --set serviceAccounts.operator.name=cilium-operator  \
@@ -41,10 +42,12 @@ helm upgrade --install cilium cilium/cilium \
     --set hubble.tls.enabled=true \
     --set hubble.tls.auto.method=helm \
     --set hubble.tls.auto.certValidityDuration=3650 \
+    --set hubble.metrics.enableOpenMetrics=true \
+    --set hubble.metrics.enabled="{dns,drop,tcp,flow,port-distribution,icmp,httpV2:exemplars=true;labelsContext=source_ip\,source_namespace\,source_workload\,destination_ip\,destination_namespace\,destination_workload\,traffic_direction}" \
     --set hubble.ui.enabled=true \
     --set prometheus.enabled=true \
     --set loadBalancer.acceleration=native \
-    --set loadBalancer.mode=hybrid \
+    --set loadBalancer.mode=snat \
     --set operator.prometheus.enabled=true \
     --set ipv6.enabled=true \
     --set bandwidthManager.enabled=true \
@@ -66,4 +69,4 @@ helm upgrade --install cilium cilium/cilium \
 
 ## Add Memory Swap Control
 helm repo add nri-plugins https://containers.github.io/nri-plugins
-helm install my-memory-qos nri-plugins/nri-memory-qos --namespace kube-system --set nri.patchRuntimeConfig=true
+helm install memory-qos nri-plugins/nri-memory-qos --namespace kube-system --set nri.patchRuntimeConfig=true

@@ -36,7 +36,50 @@ resource "null_resource" "master-node-initial" {
       timeout     = "600s"
     }
   }
+}
 
+resource "null_resource" "master-node-prometheus-setup" {
+  depends_on = [null_resource.master-node-initial]
+  count = length(digitalocean_droplet.master-node)
+
+  provisioner "file" {
+    source      = "k8s/prometheus-stack-values.yaml"
+    destination = "/tmp/prometheus-stack-values.yaml"
+    connection {
+      type        = "ssh"
+      user        = "root"
+      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      private_key = file("ssh_keys/id_rsa")
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sed -i \"s|{{control-plane-node}}|${var.control_plane_node_name}-${count.index+1}|g\" /tmp/prometheus-stack-values.yaml",
+    ]
+    connection {
+      type        = "ssh"
+      user        = "root"
+      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      private_key = file("ssh_keys/id_rsa")
+      timeout     = "600s"
+    }
+  }
+}
+
+resource "null_resource" "master-node-add-digitalocean-csi" {
+  depends_on = [null_resource.master-node-initial]
+  count      = length(digitalocean_droplet.master-node)
+  provisioner "file" {
+    source      = "config/kubeconfig"
+    destination = "/tmp/kubeconfig"
+    connection {
+      type        = "ssh"
+      user        = "root"
+      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      private_key = file("ssh_keys/id_rsa")
+    }
+  }
 
   provisioner "file" {
     source      = "k8s/digitalocean-secret.yaml"
@@ -86,6 +129,21 @@ resource "null_resource" "master-node-initial" {
       timeout     = "600s"
     }
   }
+}
+
+resource "null_resource" "master-node-add-cilium-lb-ppols" {
+  depends_on = [null_resource.master-node-initial]
+  count      = length(digitalocean_droplet.master-node)
+  provisioner "file" {
+    source      = "config/kubeconfig"
+    destination = "/tmp/kubeconfig"
+    connection {
+      type        = "ssh"
+      user        = "root"
+      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      private_key = file("ssh_keys/id_rsa")
+    }
+  }
 
   provisioner "file" {
     source      = "k8s/cilium-lb-ip-pool.yaml"
@@ -116,6 +174,20 @@ resource "null_resource" "master-node-initial" {
     inline = [
       "export KUBECONFIG=/tmp/kubeconfig",
       "kubectl apply -f /tmp/cilium-lb-ip-pool.yaml"
+    ]
+    connection {
+      type        = "ssh"
+      user        = "root"
+      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      private_key = file("ssh_keys/id_rsa")
+      timeout     = "600s"
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "export KUBECONFIG=/tmp/kubeconfig",
+      "kubectl label node ${var.master_node_name}-${count.index+1} node-role.kubernetes.io/master=master"
     ]
     connection {
       type        = "ssh"

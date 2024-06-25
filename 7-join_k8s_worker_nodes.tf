@@ -30,4 +30,29 @@ resource "null_resource" "join-worker-node" {
       timeout     = "600s"
     }
   }
+
+  provisioner "file" {
+    source      = "config/kubeconfig"
+    destination = "/tmp/kubeconfig"
+    connection {
+      type        = "ssh"
+      user        = "root"
+      host        = digitalocean_droplet.worker-node[count.index].ipv4_address
+      private_key = file("ssh_keys/id_rsa")
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "export KUBECONFIG=/tmp/kubeconfig",
+      "kubectl label node ${var.worker_node_name}-${count.index+1} node-role.kubernetes.io/worker=worker"
+    ]
+    connection {
+      type        = "ssh"
+      user        = "root"
+      host        = digitalocean_droplet.worker-node[count.index].ipv4_address
+      private_key = file("ssh_keys/id_rsa")
+      timeout     = "600s"
+    }
+  }
 }

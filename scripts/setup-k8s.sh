@@ -1,14 +1,6 @@
 #!/bin/bash
 
-# Tune CGroups
-sudo mkdir /usr/lib/systemd/system/user@.service.d
-sudo cat > /usr/lib/systemd/system/user@.service.d/delegate.conf<<EOF
-[Service]
-Delegate=cpu cpuset io memory pids
-EOF
-sudo systemctl daemon-reload
-
-# Rocky Linux K8s Installation with Cilium Enabled on CRI-O
+# CentOS-based Linux K8s Installation with Cilium Enabled on CRI-O
 # This scripts for Master / Worker Node
 
 dnf makecache --refresh
@@ -46,14 +38,14 @@ EOF
 sudo sysctl --system
 
 # Swap Enable
-dd if=/dev/zero of=/swapfile bs=256M count=32
+dd if=/dev/zero of=/swapfile bs=512M count=32
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
 sudo cp /etc/fstab /etc/fstab.bak
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-sudo sysctl vm.swappiness=10
-sudo sysctl vm.vfs_cache_pressure=50
+sudo sysctl vm.swappiness=50
+sudo sysctl vm.vfs_cache_pressure=70
 
 sudo dnf update -y
 sudo dnf install ca-certificates curl gnupg -y
