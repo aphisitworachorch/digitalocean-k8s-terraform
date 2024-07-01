@@ -1,7 +1,14 @@
 #!/bin/bash
 
-# CentOS-based Linux K8s Installation with Cilium Enabled on CRI-O
+# CentOS-based Linux K8s Installation with Cilium Enabled on ContainerD
 # This scripts for Master / Worker Node
+
+sudo mkdir -p /etc/systemd/system/user@.service.d
+cat <<EOF | sudo tee /etc/systemd/system/user@.service.d/delegate.conf
+[Service]
+Delegate=cpu cpuset io memory pids
+EOF
+sudo systemctl daemon-reload
 
 dnf makecache --refresh
 sudo dnf install yum-plugin-versionlock -y
@@ -37,28 +44,20 @@ EOF
 
 sudo sysctl --system
 
-# Swap Enable
-dd if=/dev/zero of=/swapfile bs=512M count=32
+# Enable Swap
+sudo dd if=/dev/zero of=/swapfile bs=1G count=16
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
 sudo cp /etc/fstab /etc/fstab.bak
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-sudo sysctl vm.swappiness=50
+sudo sysctl vm.swappiness=100
 sudo sysctl vm.vfs_cache_pressure=70
+echo 'vm.swappiness=100' | sudo tee -a /etc/sysctl.conf
+echo 'vm.vfs_cache_pressure=70' | sudo tee -a /etc/sysctl.conf
 
 sudo dnf update -y
 sudo dnf install ca-certificates curl gnupg -y
-
-# CRI-O Installation
-cat <<EOF | tee /etc/yum.repos.d/cri-o.repo
-[cri-o]
-name=CRI-O
-baseurl=https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/rpm/
-enabled=1
-gpgcheck=1
-gpgkey=https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/rpm/repodata/repomd.xml.key
-EOF
     
 # Install CNI Support
 export CNI_VERSION=$(wget -qO - "https://api.github.com/repos/containernetworking/plugins/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
@@ -84,38 +83,16 @@ exclude=kubelet kubeadm kubectl
 EOF
 
 # Update apt package index, install kubelet, kubeadm and kubectl, and pin their version:
-
+sudo yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo
 sudo dnf update
-sudo dnf install -y cri-o cri-tools
-
-# apt-mark hold will prevent the package from being automatically upgraded or removed.
-
-sudo dnf versionlock cri-o
-
-# Additional Setup for CRI-O
-cat <<EOF | sudo tee /etc/crio/crio.conf.d/02-cgroup-manager.conf
-[crio.api]
-default_capabilities = [
-	"CHOWN",
-	"DAC_OVERRIDE",
-	"FSETID",
-	"FOWNER",
-	"SETGID",
-	"SETUID",
-	"SETPCAP",
-	"NET_BIND_SERVICE",
-	"KILL",
-]
-[crio.network]
-plugin_dirs = [
-	"/opt/cni/bin",
-]
-EOF
-
-# Enable and start kubelet service
-sudo systemctl daemon-reload
-sudo systemctl enable --now crio
-sudo systemctl start crio
+sudo dnf install -y containerd.io
+sudo mv /etc/containerd/config.toml /etc/containerd/config.toml.orig
+sudo containerd config default > /etc/containerd/config.toml
+sudo sed -i '/\[plugins\."io\.containerd\.nri\.v1\.nri"\]/,/^$/ s/disable = true/disable = false/' /etc/containerd/config.toml
+sudo systemctl restart containerd
+sudo systemctl enable --now containerd
 
 # Initialize Kubernetes
 ## This Installation without Kube Proxy

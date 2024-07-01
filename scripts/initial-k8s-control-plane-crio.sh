@@ -47,6 +47,7 @@ featureGates:
     NodeSwap: true
 memorySwap:
     swapBehavior: LimitedSwap
+cgroupDriver: cgroupfs
 EOF
 
 kubeadm init \

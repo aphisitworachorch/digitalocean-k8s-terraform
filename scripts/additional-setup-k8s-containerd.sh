@@ -64,8 +64,7 @@ helm upgrade --install cilium cilium/cilium \
     --set l2announcements.leaseDuration=3s \
     --set l2announcements.leaseRenewDeadline=1s \
     --set l2announcements.leaseRetryPeriod=200ms \
-    --set externalIPs.enabled=true \
-    --set containerRuntime.integration=crio
+    --set externalIPs.enabled=true
 
 ## Add Memory Swap Control
 helm repo add nri-plugins https://containers.github.io/nri-plugins

@@ -2,7 +2,7 @@ resource "null_resource" "control-plane-node-setup" {
   depends_on = [digitalocean_droplet.control-plane-node]
   count      = length(digitalocean_droplet.control-plane-node)
   provisioner "file" {
-    source      = "scripts/setup-k8s.sh"
+    source      = var.container_library == "crio" ? "scripts/setup-k8s-crio.sh" : "scripts/setup-k8s-containerd.sh"
     destination = "/tmp/setup-k8s.sh"
     connection {
       type        = "ssh"
@@ -35,7 +35,7 @@ resource "null_resource" "master-node-setup" {
   depends_on = [null_resource.control-plane-node-setup, digitalocean_droplet.master-node]
   count      = length(digitalocean_droplet.master-node)
   provisioner "file" {
-    source      = "scripts/setup-k8s.sh"
+    source      = var.container_library == "crio" ? "scripts/setup-k8s-crio.sh" : "scripts/setup-k8s-containerd.sh"
     destination = "/tmp/setup-k8s.sh"
     connection {
       type        = "ssh"
@@ -68,7 +68,7 @@ resource "null_resource" "worker-node-setup" {
   depends_on = [null_resource.additional-setup-control-plane-node, digitalocean_droplet.worker-node]
   count      = length(digitalocean_droplet.worker-node)
   provisioner "file" {
-    source      = "scripts/setup-k8s.sh"
+    source      = var.container_library == "crio" ? "scripts/setup-k8s-crio.sh" : "scripts/setup-k8s-containerd.sh"
     destination = "/tmp/setup-k8s.sh"
     connection {
       type        = "ssh"

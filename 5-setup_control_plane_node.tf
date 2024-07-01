@@ -14,7 +14,7 @@ resource "null_resource" "additional-setup-control-plane-node" {
   }
 
   provisioner "file" {
-    source      = "scripts/additional-setup-k8s.sh"
+    source      = var.container_library == "crio" ? "scripts/additional-setup-k8s-crio.sh" : "scripts/additional-setup-k8s-containerd.sh"
     destination = "/tmp/additional-setup-k8s.sh"
     connection {
       type        = "ssh"

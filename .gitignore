@@ -8,3 +8,4 @@
 /.terraform/*
 /scripts/join-master.sh
 /scripts/join-worker.sh
+/joiner/*

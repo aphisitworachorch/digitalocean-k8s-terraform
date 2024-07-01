@@ -7,8 +7,8 @@
 * **CentOS-based K8s Install Script (AlmaLinux / Rocky Linux / CentOS)**
 * **K8s v1.30**
 * Swap-Enabled
-* CRI-O
-* NRI Memory QoS
+* **CRI-O / containerD**
+* NRI Memory QoS *(**Enabled on containerD**)*
 * **Cilium eBPF / Cilium Load Balancer**
 * Prometheus Grafana Stack
 * DigitalOcean CSI PV Integrated

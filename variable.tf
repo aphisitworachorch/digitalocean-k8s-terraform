@@ -117,3 +117,12 @@ variable "control_plane_node_droplet_size" {
     error_message = "Control Plane Node Droplet Size Can't Be Null"
   }
 }
+
+variable "container_library" {
+  description = "Container Library (e.g. containerD / cri-o)"
+  type        = string
+  validation {
+    condition     = var.container_library != null
+    error_message = "Container Library Can't Be Null"
+  }
+}

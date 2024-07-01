@@ -2,7 +2,7 @@ resource "null_resource" "control-plane-node-initial" {
   depends_on = [null_resource.control-plane-node-install-k8s]
   count      = length(digitalocean_droplet.control-plane-node)
   provisioner "file" {
-    source      = "scripts/initial-k8s-control-plane.sh"
+    source      = var.container_library == "crio" ? "scripts/initial-k8s-control-plane-crio.sh" : "scripts/initial-k8s-control-plane-containerd.sh"
     destination = "/tmp/initial-k8s-control-plane.sh"
     connection {
       type        = "ssh"
@@ -27,11 +27,11 @@ resource "null_resource" "control-plane-node-initial" {
   }
 
   provisioner "local-exec" {
-    command = "scp -o StrictHostKeyChecking=no -i ssh_keys/id_rsa root@${digitalocean_droplet.control-plane-node[count.index].ipv4_address}:./join-master.sh scripts/join-master.sh"
+    command = "scp -o StrictHostKeyChecking=no -i ssh_keys/id_rsa root@${digitalocean_droplet.control-plane-node[count.index].ipv4_address}:./join-master.sh joiner/join-master.sh"
   }
 
   provisioner "local-exec" {
-    command = "scp -o StrictHostKeyChecking=no -i ssh_keys/id_rsa root@${digitalocean_droplet.control-plane-node[count.index].ipv4_address}:./join-worker.sh scripts/join-worker.sh"
+    command = "scp -o StrictHostKeyChecking=no -i ssh_keys/id_rsa root@${digitalocean_droplet.control-plane-node[count.index].ipv4_address}:./join-worker.sh joiner/join-worker.sh"
   }
 
   provisioner "local-exec" {

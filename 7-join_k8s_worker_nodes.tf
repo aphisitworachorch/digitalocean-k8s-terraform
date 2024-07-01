@@ -2,7 +2,7 @@ resource "null_resource" "push-worker-node-join" {
   depends_on = [null_resource.worker-node-setup, null_resource.worker-node-install-k8s]
   count      = length(digitalocean_droplet.worker-node)
   provisioner "file" {
-    source      = "scripts/join-worker.sh"
+    source      = "joiner/join-worker.sh"
     destination = "./join-worker.sh"
     connection {
       type        = "ssh"
@@ -45,7 +45,7 @@ resource "null_resource" "join-worker-node" {
   provisioner "remote-exec" {
     inline = [
       "export KUBECONFIG=/tmp/kubeconfig",
-      "kubectl label node ${var.worker_node_name}-${count.index+1} node-role.kubernetes.io/worker=worker"
+      "kubectl label node ${var.worker_node_name}-${count.index + 1} node-role.kubernetes.io/worker=worker"
     ]
     connection {
       type        = "ssh"
