@@ -1,5 +1,5 @@
 resource "null_resource" "master-node-prometheus-setup" {
-  depends_on = [null_resource.master-node-initial, null_resource.join-worker-node]
+  depends_on = [null_resource.master-node-initial, null_resource.worker-node-initial]
   count      = length(digitalocean_droplet.master-node)
 
   provisioner "file" {
@@ -15,7 +15,7 @@ resource "null_resource" "master-node-prometheus-setup" {
 
   provisioner "remote-exec" {
     inline = [
-      "sed -i \"s|{{control-plane-node}}|${var.control_plane_node_name}-${count.index + 1}|g\" /tmp/prometheus-stack-values.yaml",
+      "sed -i \"s|{{control-plane-node}}|${digitalocean_droplet.control-plane-node[count.index].name}|g\" /tmp/prometheus-stack-values.yaml",
     ]
     connection {
       type        = "ssh"
@@ -28,7 +28,7 @@ resource "null_resource" "master-node-prometheus-setup" {
 }
 
 resource "null_resource" "master-node-add-digitalocean-csi" {
-  depends_on = [null_resource.master-node-prometheus-setup, null_resource.join-worker-node]
+  depends_on = [null_resource.master-node-prometheus-setup, null_resource.worker-node-initial]
   count      = length(digitalocean_droplet.master-node)
   provisioner "file" {
     source      = "config/kubeconfig"
@@ -92,7 +92,7 @@ resource "null_resource" "master-node-add-digitalocean-csi" {
 }
 
 resource "null_resource" "master-node-add-cilium-lb-ppols" {
-  depends_on = [null_resource.master-node-add-digitalocean-csi, null_resource.join-worker-node]
+  depends_on = [null_resource.master-node-add-digitalocean-csi, null_resource.worker-node-initial]
   count      = length(digitalocean_droplet.master-node)
   provisioner "file" {
     source      = "config/kubeconfig"
@@ -134,20 +134,6 @@ resource "null_resource" "master-node-add-cilium-lb-ppols" {
     inline = [
       "export KUBECONFIG=/tmp/kubeconfig",
       "kubectl apply -f /tmp/cilium-lb-ip-pool.yaml"
-    ]
-    connection {
-      type        = "ssh"
-      user        = "root"
-      host        = digitalocean_droplet.master-node[count.index].ipv4_address
-      private_key = file("ssh_keys/id_rsa")
-      timeout     = "600s"
-    }
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "export KUBECONFIG=/tmp/kubeconfig",
-      "kubectl label node ${var.master_node_name}-${count.index + 1} node-role.kubernetes.io/master=master"
     ]
     connection {
       type        = "ssh"

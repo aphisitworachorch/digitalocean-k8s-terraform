@@ -27,7 +27,7 @@ resource "null_resource" "additional-setup-control-plane-node" {
   provisioner "remote-exec" {
     inline = [
       "sudo chmod +x /tmp/additional-setup-k8s.sh",
-      "sudo /tmp/additional-setup-k8s.sh ${digitalocean_droplet.control-plane-node[count.index].ipv4_address}"
+      "sudo /tmp/additional-setup-k8s.sh ${digitalocean_droplet.control-plane-node[count.index].ipv4_address} ${digitalocean_droplet.control-plane-node[count.index].ipv6_address}"
     ]
     connection {
       type        = "ssh"

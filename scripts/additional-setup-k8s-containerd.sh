@@ -1,4 +1,4 @@
-if [ -z "$1" ]
+if [ -z "$1" ] && [ -z "$2" ]
 then
     echo "IP Address is Empty!"
     exit 1
@@ -7,9 +7,13 @@ fi
 kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 
 export MASTER_NODE_IP=$1
+export MASTER_NODE_IPV6=$2
 
 # Metrics Server
 kubectl apply -f /tmp/metrics-server.yaml
+
+# Gateway API Enabled
+kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.1/standard-install.yaml
 
 # Install Helm
 curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
@@ -25,13 +29,11 @@ helm upgrade --install cilium cilium/cilium \
     --namespace kube-system \
     --create-namespace \
     --set bpf.masquerade=true \
-    --set bpf.autoMount.enabled=false \
     --set encryption.nodeEncryption=false \
     --set routingMode=tunnel \
     --set k8sServiceHost=$MASTER_NODE_IP \
     --set k8sServicePort=6443  \
     --set kubeProxyReplacement=true  \
-    --set prometheus.enabled=true \
     --set operator.replicas=1  \
     --set serviceAccounts.cilium.name=cilium  \
     --set serviceAccounts.operator.name=cilium-operator  \
@@ -50,9 +52,10 @@ helm upgrade --install cilium cilium/cilium \
     --set loadBalancer.mode=snat \
     --set operator.prometheus.enabled=true \
     --set ipv6.enabled=true \
+    --set ipv6.enabled=true \
     --set bandwidthManager.enabled=true \
     --set ipam.mode=kubernetes \
-    --set ipam.operator.clusterPoolIPv4PodCIDRList="10.244.0.0/16" \
+    --set ipam.operator.clusterPoolIPv4PodCIDRList="10.131.0.0/16" \
     --set ipam.operator.clusterPoolIPv6PodCIDRList="2001:db8:42:0::/96" \
     --set ipam.operator.clusterPoolIPv4MaskSize=24 \
     --set ipam.operator.clusterPoolIPv6MaskSize=112 \
@@ -60,12 +63,8 @@ helm upgrade --install cilium cilium/cilium \
     --set k8s.requireIPv6PodCIDR=true \
     --set enableIPv6Masquerade=true \
     --set devices="{eth0, eth1}" \
-    --set l2announcements.enabled=true \
-    --set l2announcements.leaseDuration=3s \
-    --set l2announcements.leaseRenewDeadline=1s \
-    --set l2announcements.leaseRetryPeriod=200ms \
-    --set externalIPs.enabled=true
-
-## Add Memory Swap Control
-helm repo add nri-plugins https://containers.github.io/nri-plugins
-helm install memory-qos nri-plugins/nri-memory-qos --namespace kube-system --set nri.patchRuntimeConfig=true
+    --set socketLB.hostNamespaceOnly=true \
+    --set cni.exclusive=false \
+    --set externalIPs.enabled=true \
+    --set gatewayAPI.enabled=true \
+    --set gatewayAPI.externalTrafficPolicy=Local

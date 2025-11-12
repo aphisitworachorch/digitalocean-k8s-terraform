@@ -5,19 +5,19 @@
 
 ### Features 🌟
 * **CentOS-based K8s Install Script (AlmaLinux / Rocky Linux / CentOS)**
-* **K8s v1.30**
+* **K8s v1.32**
 * Swap-Enabled
 * **CRI-O / containerD**
-* NRI Memory QoS *(**Enabled on containerD**)*
 * **Cilium eBPF / Cilium Load Balancer**
 * Prometheus Grafana Stack
 * DigitalOcean CSI PV Integrated
 
 ### Install Instruction 🏗️
 **IMPORTANT!!!! You must issue DigitalOcean PAT Token from your accounts**
-1. **For variables**: write in *.tfavrs (* is any name) for variables (Example file in example.tfvars.ex)
+1. **For variables**: write in *.tfavrs* ( is any name) for variables (Example file in example.tfvars.ex)
 2. To **Run** use : terraform apply -var-file='*.tfvars'
 3. To **Destroy** use : terraform destroy -var-file='*.tfvars'
 
 ### Credits / Thanks to
 * Narongchai (@kreactnative) (https://github.com/kreactnative/digitalocean-terraform-k8s-dualstack-elb/)
+

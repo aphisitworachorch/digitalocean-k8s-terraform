@@ -17,15 +17,6 @@ variable "droplet_images" {
   }
 }
 
-variable "master_node_name" {
-  description = "Master Node Name"
-  type        = string
-  validation {
-    condition     = var.master_node_name != null
-    error_message = "Master Node Name Can't Be Null"
-  }
-}
-
 variable "master_node_droplet_size" {
   description = "Master Node Droplet Size"
   type        = string
@@ -41,15 +32,6 @@ variable "master_nodes_count" {
   validation {
     condition     = var.master_nodes_count % 2 == 0 || var.master_nodes_count == 1
     error_message = "Master Node must be even number!"
-  }
-}
-
-variable "worker_node_name" {
-  description = "Worker Node Name"
-  type        = string
-  validation {
-    condition     = var.worker_node_name != null
-    error_message = "Worker Node Name Can't Be Null"
   }
 }
 
@@ -97,15 +79,6 @@ variable "cluster_name" {
   validation {
     condition     = var.cluster_name != null
     error_message = "Cluster Name Shouldn't be Null"
-  }
-}
-
-variable "control_plane_node_name" {
-  description = "Control Plane Node Name"
-  type        = string
-  validation {
-    condition     = var.control_plane_node_name != null
-    error_message = "Control Plane Node Name Shouldn't be Null"
   }
 }
 

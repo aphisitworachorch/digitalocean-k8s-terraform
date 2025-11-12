@@ -14,7 +14,7 @@ export MASTER_NODE_IPV6=$2
 export NODE_NAME=$3
 
 cat <<EOF | sudo tee cluster-config.yaml
-apiVersion: kubeadm.k8s.io/v1beta3
+apiVersion: kubeadm.k8s.io/v1beta4
 kind: InitConfiguration
 localAPIEndpoint:
     advertiseAddress: ${MASTER_NODE_IP}
@@ -22,9 +22,12 @@ localAPIEndpoint:
 nodeRegistration:
     criSocket: unix:///var/run/crio/crio.sock
     kubeletExtraArgs:
-        node-ip: ${MASTER_NODE_IP},${MASTER_NODE_IPV6}
+        - name: node-ip
+          value: ${MASTER_NODE_IP},${MASTER_NODE_IPV6}
+skipPhases:
+  - addon/kube-proxy
 ---
-apiVersion: kubeadm.k8s.io/v1beta3
+apiVersion: kubeadm.k8s.io/v1beta4
 kind: ClusterConfiguration
 apiServer:
     certSANs:
@@ -36,8 +39,10 @@ networking:
     serviceSubnet: 10.96.0.0/16,2001:db8:42:1::/112
 controllerManager:
     extraArgs:
-        node-cidr-mask-size-ipv4: "24"
-        node-cidr-mask-size-ipv6: "112"
+        - name: node-cidr-mask-size-ipv4
+          value: "24"
+        - name: node-cidr-mask-size-ipv6
+          value: "112"
 kubernetesVersion: "stable"
 ---
 apiVersion: kubelet.config.k8s.io/v1beta1
@@ -51,7 +56,6 @@ cgroupDriver: cgroupfs
 EOF
 
 kubeadm init \
-    --skip-phases=addon/kube-proxy \
     --ignore-preflight-errors=NumCPU \
     --config=cluster-config.yaml \
     --upload-certs \

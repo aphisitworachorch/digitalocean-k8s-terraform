@@ -7,6 +7,7 @@ fi
 kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 
 export MASTER_NODE_IP=$1
+export MASTER_NODE_IPV6=$2
 
 # Metrics Server
 kubectl apply -f /tmp/metrics-server.yaml
@@ -25,13 +26,11 @@ helm upgrade --install cilium cilium/cilium \
     --namespace kube-system \
     --create-namespace \
     --set bpf.masquerade=true \
-    --set bpf.autoMount.enabled=false \
     --set encryption.nodeEncryption=false \
     --set routingMode=tunnel \
     --set k8sServiceHost=$MASTER_NODE_IP \
     --set k8sServicePort=6443  \
     --set kubeProxyReplacement=true  \
-    --set prometheus.enabled=true \
     --set operator.replicas=1  \
     --set serviceAccounts.cilium.name=cilium  \
     --set serviceAccounts.operator.name=cilium-operator  \
@@ -50,6 +49,7 @@ helm upgrade --install cilium cilium/cilium \
     --set loadBalancer.mode=snat \
     --set operator.prometheus.enabled=true \
     --set ipv6.enabled=true \
+    --set ipv6NativeRoutingCIDR="${MASTER_NODE_IPV6}/120" \
     --set bandwidthManager.enabled=true \
     --set ipam.mode=kubernetes \
     --set ipam.operator.clusterPoolIPv4PodCIDRList="10.244.0.0/16" \
@@ -60,8 +60,5 @@ helm upgrade --install cilium cilium/cilium \
     --set k8s.requireIPv6PodCIDR=true \
     --set enableIPv6Masquerade=true \
     --set devices="{eth0, eth1}" \
-    --set l2announcements.enabled=true \
-    --set l2announcements.leaseDuration=3s \
-    --set l2announcements.leaseRenewDeadline=1s \
-    --set l2announcements.leaseRetryPeriod=200ms \
+    --set socketLB.hostNamespaceOnly=true \
     --set externalIPs.enabled=true

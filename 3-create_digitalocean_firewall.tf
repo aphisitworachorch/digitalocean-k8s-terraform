@@ -1,5 +1,5 @@
 resource "digitalocean_firewall" "web" {
-  name        = "k8s-firewall"
+  name        = "${var.cluster_name}-k8s-firewall"
   depends_on  = [digitalocean_droplet.master-node, digitalocean_droplet.worker-node, digitalocean_droplet.control-plane-node]
   droplet_ids = [for item in concat(digitalocean_droplet.master-node, digitalocean_droplet.worker-node, digitalocean_droplet.control-plane-node) : item.id]
 
@@ -19,12 +19,6 @@ resource "digitalocean_firewall" "web" {
 
   inbound_rule {
     protocol         = "icmp"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "80"
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
 
